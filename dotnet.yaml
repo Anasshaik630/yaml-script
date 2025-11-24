@@ -1,0 +1,54 @@
+tigger:
+ branches:
+  include:
+   - main
+pool:
+ vmImage: "ubtune-latest"
+variable:
+ configBuild: "Release"
+stages:
+ - stage: Build 
+   displayname: "Build in the progress"
+   jobs:
+   - job: Buildjob
+     displayname: "Build the .net application"
+     steps:
+      - checkout: self
+      #install the .net code
+      - task: useDotnet@2
+        inputs:
+         - package: 'sdk'
+         - version: '8.0.x'
+      #Restore the dotnet file
+      - task: DotnetCoreCrl@2
+        inputs:
+         - command: 'restore'
+         - projects: '**/*.csproj'
+      # Build the Dotnet File
+      - task: DotnetCoreCrl@2
+        inputs:
+         - command: 'Build'
+         - projects: '**/*.csproj'
+         - arguments: '--configuation $(configBuild)'
+ - stage: Test
+   dependsOn: Build
+   displayname: "Test the code"
+   jobs:
+    - job: Testjob
+      displayname: "Test the job"
+      steps:
+       - checkout: self
+       #install .netSdk
+       - task: useDotnet@2
+         inputs:
+          package: 'sdk'
+          version: '8.0.x'
+       #Test the Dotnet File
+       - task: DotnetCoreCrl@2
+         inputs:
+          - command: 'test'
+          - projects: '**/*test*.csproj'
+          - arguments: '--configuation $(configBuild)'
+        
+
+       
